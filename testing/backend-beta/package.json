@@ -1,0 +1,27 @@
+{
+  "name": "backend-beta",
+  "version": "1.0.0",
+  "description": "development phase backend",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node ./src/index.js"
+  },
+  "keywords": [
+    "attendance-performance-tracking",
+    "Error-404"
+  ],
+  "author": "Srijon-Paul-Team-Error-404",
+  "license": "ISC",
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "cookieparser": "^0.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "mongoose": "^9.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
+  }
+}
