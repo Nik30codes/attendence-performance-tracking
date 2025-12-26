@@ -12,14 +12,26 @@ const userSchema = mongoose.Schema({
 		required: true,
 		trim: true,
 		lowercase: true,
+		unique: true
+	},
+	authType: {
+		type: String,
+		enum: ["GOOGLE", "LOCAL"],
+		default: "GOOGLE"
+	},
+	providerId: {
+		type: String
 	},
 	role: {
 		type: String,
-		enum: ["ADMIN", "EMPLOYEE", "MANAGER"]
+		enum: ["ADMIN", "EMPLOYEE", "MANAGER"],
+		default: "EMPLOYEE"
+
 	},
 	status: {
 		type: String,
-		enum: ["ACTIVE", "INACTIVE"]
+		enum: ["ACTIVE", "INACTIVE"],
+		default: "ACTIVE"
 	},
 	department: {
 		type: mongoose.Schema.Types.ObjectId,
@@ -38,7 +50,6 @@ userSchema.methods.generateAccessToken = async function (){
 	return jwt.sign(
 		{
 			_id: this._id,
-			name: this.name,
 			email: this.email
 		},
 		process.env.ACCESS_TOKEN_SECRET,
