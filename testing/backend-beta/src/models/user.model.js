@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
 
 const userSchema = mongoose.Schema({
 	name: {
@@ -14,13 +15,15 @@ const userSchema = mongoose.Schema({
 		lowercase: true,
 		unique: true
 	},
+	password: {
+		type: String,
+		required: true,
+		trim: true
+	},
 	authType: {
 		type: String,
 		enum: ["GOOGLE", "LOCAL"],
-		default: "GOOGLE"
-	},
-	providerId: {
-		type: String
+		default: "LOCAL"
 	},
 	role: {
 		type: String,
@@ -44,6 +47,16 @@ const userSchema = mongoose.Schema({
 {
 	timestamps: true
 });
+
+userSchema.pre("save", async function(next){
+	if(!this.isModified("password")) return next();
+	this.password = bcrypt.hash(this.password, 10);
+	next();
+});
+userSchema.methods.isPasswordCorrect = async function(password){
+	return await bcrypt.compare(password, this.password);
+}
+
 
 // below two are methods for generating access and refresh token
 userSchema.methods.generateAccessToken = async function (){
