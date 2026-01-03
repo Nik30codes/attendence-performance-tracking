@@ -12,6 +12,8 @@ userRouter.route("/createuser").post(verifyJWT, canCreateUser, createUser);
 userRouter.route("/getactiveusers").get(verifyJWT, authorizeRoles("ADMIN", "MANAGER"), getActiveUsers);
 userRouter.route("/dept-users/:departmentId").get(verifyJWT, authorizeRoles("ADMIN", "MANAGER"), getUsersByDepartment)
 userRouter.route("/getuser/:id").get(verifyJWT, authorizeRoles("ADMIN", "MANAGER"), getUser);
+
+// update is not fixed yet (managers can also update managers and admin) so this need fix.
 userRouter.route("/updateuser").patch(verifyJWT, authorizeRoles("ADMIN", "MANAGER"), updateUser);
 
-export default userRouter;
+export default userRouter;														

@@ -4,7 +4,9 @@ const departmentSchema = mongoose.Schema({
 	name: {
 		type: String,
 		required: true,
-		unique: true
+		unique: true,
+		lowercase: true,
+		trim: true
 	},
 	description: {
 		type: String
