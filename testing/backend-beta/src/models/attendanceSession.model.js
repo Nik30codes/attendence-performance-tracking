@@ -22,10 +22,15 @@ const attendanceSessionSchema = mongoose.Schema({
 		type: mongoose.Schema.Types.ObjectId,
 		ref: "User",
 		required: true
+	},
+	departmentId: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: "Department",
 	}
+
 },
-{
-	timestamps: true
-});
+	{
+		timestamps: true
+	});
 
 export const AttendanceSession = mongoose.model("AttendanceSession", attendanceSessionSchema);

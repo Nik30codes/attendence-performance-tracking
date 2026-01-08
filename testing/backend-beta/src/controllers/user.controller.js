@@ -3,6 +3,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
+import { Department } from "../models/department.model.js";
 
 const generateAccessAndRefreshToken = async (userId) => {
 	try {
@@ -88,8 +89,8 @@ const loginUser = asyncHandler(async (req, res) => {
 })
 
 const createUser = asyncHandler(async (req, res) => {
-	const { name, email, password, role, department } = req.body;
-	if ([name, email, password].some((field) => field?.trim() === "")) {
+	const { name, email, password, role, departmentName } = req.body;
+	if ([name, email, password, role, departmentName].some((field) => field?.trim() === "")) {
 		throw new ApiError(400, "Fields cannot be Empty!");
 	}
 	const existedUser = await User.findOne({ email });
@@ -97,17 +98,24 @@ const createUser = asyncHandler(async (req, res) => {
 		throw new ApiError(409, "Email Already Registered!");
 	}
 
+	const department = await Department.findOne({
+		name: departmentName.trim()
+	})
+	if(!department){
+		throw new ApiError(404, `Department ${departmentName} not found!`)
+	}
+
 	const user = await User.create({
 		name,
 		email,
 		password,
 		role,
-		department,
+		department: department._id,
 	});
 
 	const createdUser = await User.findById(user._id).select(
 		"-password -refreshToken"
-	)
+	).populate("department", "name")
 
 	return res.status(201).json(
 		new ApiResponse(201, createdUser, "User created Successfully")
