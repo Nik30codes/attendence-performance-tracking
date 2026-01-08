@@ -10,6 +10,6 @@ attendanceRoute.route("/mark-attendance").post(verifyJWT, authorizeRoles("ADMIN"
 attendanceRoute.route("/get-todayattendance").get(verifyJWT, authorizeRoles("ADMIN", "MANAGER"), getTodayAttendanceSession);
 attendanceRoute.route("/get-session/:sessionId").get(verifyJWT, authorizeRoles("ADMIN", "MANAGER"), getAttendanceBySession);
 attendanceRoute.route("/get-userattendance/:userId").get(verifyJWT, authorizeRoles("ADMIN", "MANAGER"), getUserAttendance);
-attendanceRoute.route("/update-attendance/:recordId").patch(verifyJWT, authorizeRoles("ADMIN, MANAGER"), updateAttendance);
+attendanceRoute.route("/update-attendance/:recordId").patch(verifyJWT, authorizeRoles("ADMIN", "MANAGER"), updateAttendance);
 
 export default attendanceRoute;

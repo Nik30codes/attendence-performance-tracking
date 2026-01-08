@@ -7,7 +7,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 const createAttendanceSession = asyncHandler(async (req, res) => {
-	const { date, startTime, endTime, type} = req.body;
+	const { date, startTime, endTime, type } = req.body;
 	let { departmentId } = req.body;
 
 	if (
@@ -41,9 +41,9 @@ const createAttendanceSession = asyncHandler(async (req, res) => {
 		departmentId = req.user.department;
 		if (!departmentId) throw new ApiError(400, "User is not assigned to any department");
 	}
-	if(req.user.role === "ADMIN"){
-		const department = await Department.findOne({name: departmentId});
-		if(!department) throw new ApiError(400, "Department is required!");
+	if (req.user.role === "ADMIN") {
+		const department = await Department.findOne({ name: departmentId });
+		if (!department) throw new ApiError(400, "Department is required!");
 		departmentId = department._id;
 	}
 
@@ -236,24 +236,47 @@ const getUserAttendance = async (req, res) => {
 		.json(new ApiResponse(200, records, "User attendance history"));
 };
 
-const updateAttendance = async (req, res) => {
+const updateAttendance = asyncHandler(async (req, res) => {
 	const { recordId } = req.params;
 	const updates = req.body;
 
-	const record = await AttendanceRecord.findByIdAndUpdate(
-		recordId,
-		updates,
-		{ new: true }
-	);
+	const allowedUpdates = ["status", "leaveReason", "checkIn", "checkOut"];
+	if(!updates) throw new ApiError(400, "empty update fields");
+	const updateKeys = Object.keys(updates);
+
+	if (!updateKeys.every(key => allowedUpdates.includes(key))) {
+		throw new ApiError(400, "Invalid fields in update request");
+	}
+
+	const record = await AttendanceRecord.findById(recordId)
+		.populate({
+			path: "userId",
+			select: "-password -refreshToken"
+		})
+		.populate("sessionId");
 
 	if (!record) {
 		throw new ApiError(404, "Attendance record not found");
 	}
 
+	if (
+		req.user.role === "MANAGER" &&
+		!record.userId.department.equals(req.user.department)
+	) {
+		throw new ApiError(403, "Cannot update attendance of another department");
+	}
+
+	updateKeys.forEach(key => {
+		record[key] = updates[key];
+	});
+
+	await record.save();
+
 	return res
 		.status(200)
 		.json(new ApiResponse(200, record, "Attendance updated"));
-};
+});
+
 
 export {
 	createAttendanceSession,
