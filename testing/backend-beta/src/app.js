@@ -23,9 +23,11 @@ app.use(cookieparser());
 import userRouter from "./routes/user.route.js";
 import deptRouter from "./routes/department.route.js";
 import attendanceRoute from "./routes/attendance.route.js";
+import performanceRouter from "./routes/performance.route.js";
 
 app.use("/api/users", userRouter);
 app.use("/api/dept", deptRouter);
 app.use("/api/attendance", attendanceRoute);
+app.use("/api/performance", performanceRouter);
 
 export {app};
