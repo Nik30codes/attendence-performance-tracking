@@ -116,11 +116,28 @@ const getPerformanceByUser = asyncHandler(async (req, res) => {
 		.json(new ApiResponse(200, records, "Performance records fetched"));
 });
 
+const getAllPerformanceRecord = asyncHandler(async(req, res) => {
+	const records = await PerformanceRecord.find()
+	.populate({
+		path: "userId",
+		select: "-password -refreshToken"
+	})
+	.populate({
+		path: "evaluatorId",
+		select: "-password -refreshToken"
+	});
+	if(!records) throw new ApiError(404, "No records found");
+
+	return res.status(200).json(
+		new ApiResponse(200, records, "Records successfully fetched")
+	);
+})
+
 const updatePerformanceRecord = asyncHandler(async (req, res) => {
 	const { recordId } = req.params;
 	const { score } = req.body;
 
-	if (score === undefined) {
+	if (score === undefined || !score) {
 		throw new ApiError(400, "Score is required for update");
 	}
 
@@ -164,6 +181,7 @@ export {
 	createPerformanceMetric,
 	recordPerformance,
 	getPerformanceByUser,
+	getAllPerformanceRecord,
 	updatePerformanceRecord,
 	getAllPerformanceMetrics
 }
