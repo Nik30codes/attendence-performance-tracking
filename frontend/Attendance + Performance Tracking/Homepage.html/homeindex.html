@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Home | Attendance System</title>
+    <link rel="stylesheet" href="homestyle.css">
+</head>
+<body>
+
+    <!-- Top Navigation Bar -->
+    <header class="navbar">
+        <div class="logo">Attendance And Performance Tracking</div>
+        <nav>
+            <a href="#" id="logoutBtn">Logout</a>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-container">
+        <h2>Welcome to Blend Vidya</h2>
+        <p class="subtitle">Select an action to continue</p>
+
+        <div class="card-container">
+
+            <div class="card" onclick="goTo('../Attendancerecordpage.html/attendanceindex.html')">
+                <h3>Record Attendance</h3>
+                <p>Mark daily attendance of employees</p>
+            </div>
+
+            <div class="card" onclick="goTo('../Performancerecordpage.html/performanceindex.html')">
+                <h3>Record Performance</h3>
+                <p>Enter performance metrics and scores</p>
+            </div>
+
+            <div class="card" onclick="goTo('../Dashboard.html/dashboardindex.html')">
+                <h3>View Dashboard</h3>
+                <p>Check confirmations and system status</p>
+            </div>
+
+        </div>
+    </main>
+
+    <script src="homepage.js"></script>
+</body>
+</html>
