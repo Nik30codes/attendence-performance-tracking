@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body {
+  background-color: #0f172a;   /* dark slate */
+  color: #e5e7eb;              /* light gray text */
+}
+
+.sidebar-link {
+  padding: 10px 14px;
+  border-radius: 8px;
+  color: #cbd5f5;
+  transition: all 0.2s ease;
+}
+
+.sidebar-link:hover {
+  background-color: #1e293b;
+}
+
+.sidebar-link.active {
+  background-color: #2563eb;
+  color: white;
+}

@@ -77,7 +77,7 @@ const loginUser = asyncHandler(async (req, res) => {
 	const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
 	const option = {
 		httpOnly: true,
-		secure: true
+		secure: true,
 	}
 
 	return res.status(200)
@@ -184,7 +184,13 @@ const updateUser = asyncHandler(async (req, res) => {
 	return res.status(200).json(
 		new ApiResponse(200, user, "User details updated")
 	)
-})
+});
+
+const verifyHome = asyncHandler(async(req, res) => {
+	return res.status(200).json(
+		new ApiResponse(200, {}, "home")
+	)
+});
 
 export {
 	loginUser,
@@ -193,5 +199,6 @@ export {
 	getUser,
 	updateUser,
 	getUsersByDepartment,
-	refreshAccessToken
+	refreshAccessToken,
+	verifyHome
 }
