@@ -7,7 +7,6 @@ This repository contains an employee operations system with separate areas for f
 
 - `frontend/` for the user interface
 - `backend/` for API, authentication, business logic, and data access
-- `testing/` for test planning and validation artifacts
 
 ## Backend Documentation
 
@@ -31,7 +30,6 @@ This repository is split by responsibility:
 
 - `frontend/` for UI work
 - `backend/` for API and server logic
-- `testing/` for validation artifacts
 
 If multiple contributors are working on the repository, keep changes scoped to the relevant area and use clear, descriptive commits.
 
