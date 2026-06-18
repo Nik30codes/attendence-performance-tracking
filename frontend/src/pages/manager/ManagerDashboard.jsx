@@ -1,98 +1,63 @@
 import { useEffect, useState } from "react";
-import api from "../../api/axios";
 import Sidebar from "../../components/Sidebar";
-import LogoutButton from "../../components/LogoutButton";
+import api from "../../api/axios";
 
 export default function ManagerDashboard() {
   const [users, setUsers] = useState([]);
-  const [attendance, setAttendance] = useState([]);
+  const [sessions, setSessions] = useState([]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const usersRes = await api.get("/users/active");
-        setUsers(usersRes.data.data || []);
-
-        const attendanceRes = await api.get("/attendance/today");
-        setAttendance(attendanceRes.data.data || []);
-      } catch (error) {
-        console.error("Failed to fetch manager dashboard data", error);
-      }
-    };
-
-    fetchData();
+    api.get("/users/active").then(r => setUsers(r.data.data || [])).catch(() => {});
+    api.get("/attendance/today").then(r => setSessions(r.data.data || [])).catch(() => setSessions([]));
   }, []);
 
-  return (
-    <div className="flex min-h-screen bg-slate-900 text-white">
-      {/* Sidebar */}
-      <Sidebar />
+  const employees = users.filter(u => u.role === "EMPLOYEE");
 
-      {/* Main Content */}
-      <main className="flex-1 p-6 space-y-8">
-        {/* Header with Logout */}
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Manager Dashboard</h1>
-          <div className="w-32">
-            <LogoutButton />
+  return (
+    <div className="flex min-h-screen bg-page">
+      <Sidebar />
+      <main className="ml-60 flex-1 p-8 space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800">Manager Dashboard</h1>
+          <p className="text-sm text-slate-500">Team overview</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="bg-blue-50 border border-blue-100 rounded-xl p-5">
+            <p className="text-sm text-slate-500">Team Members</p>
+            <p className="text-3xl font-bold text-blue-600 mt-1">{employees.length}</p>
+          </div>
+          <div className="bg-green-50 border border-green-100 rounded-xl p-5">
+            <p className="text-sm text-slate-500">Today's Sessions</p>
+            <p className="text-3xl font-bold text-green-600 mt-1">{sessions.length}</p>
+          </div>
+          <div className="bg-purple-50 border border-purple-100 rounded-xl p-5">
+            <p className="text-sm text-slate-500">Total Staff</p>
+            <p className="text-3xl font-bold text-purple-600 mt-1">{users.length}</p>
           </div>
         </div>
 
-        {/* Active Employees */}
-        <section className="bg-slate-800 p-4 rounded-lg">
-          <h2 className="text-lg font-semibold mb-4">
-            Active Employees
-          </h2>
-
-          <table className="w-full text-left border-collapse">
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
+          <h2 className="text-base font-semibold text-slate-800 mb-4">Team Members</h2>
+          <table className="w-full text-left">
             <thead>
-              <tr className="text-slate-300 border-b border-slate-700">
-                <th className="p-2">Name</th>
-                <th className="p-2">Email</th>
-                <th className="p-2">Department</th>
+              <tr className="text-xs text-slate-500 uppercase border-b border-slate-100">
+                <th className="pb-3 px-2 font-medium">Name</th>
+                <th className="pb-3 px-2 font-medium">Email</th>
+                <th className="pb-3 px-2 font-medium">Department</th>
               </tr>
             </thead>
             <tbody>
-              {users.map((u) => (
-                <tr key={u._id} className="border-b border-slate-700">
-                  <td className="p-2">{u.name}</td>
-                  <td className="p-2">{u.email}</td>
-                  <td className="p-2">
-                    {u.department?.name || u.department}
-                  </td>
+              {employees.map(u => (
+                <tr key={u._id} className="border-b border-slate-50 text-sm hover:bg-slate-50/50">
+                  <td className="py-3 px-2 font-medium text-slate-700">{u.name}</td>
+                  <td className="py-3 px-2 text-slate-500">{u.email}</td>
+                  <td className="py-3 px-2 text-slate-500 capitalize">{u.department?.name || "—"}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </section>
-
-        {/* Today Attendance */}
-        <section className="bg-slate-800 p-4 rounded-lg">
-          <h2 className="text-lg font-semibold mb-4">
-            Today Attendance
-          </h2>
-
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="text-slate-300 border-b border-slate-700">
-                <th className="p-2">User ID</th>
-                <th className="p-2">Status</th>
-                <th className="p-2">Time</th>
-              </tr>
-            </thead>
-            <tbody>
-              {attendance.map((a) => (
-                <tr key={a._id} className="border-b border-slate-700">
-                  <td className="p-2">{a.userId}</td>
-                  <td className="p-2">{a.status}</td>
-                  <td className="p-2">
-                    {new Date(a.timestamp).toLocaleTimeString()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
+        </div>
       </main>
     </div>
   );

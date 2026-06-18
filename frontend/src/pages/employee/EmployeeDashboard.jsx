@@ -1,126 +1,69 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import Sidebar from "../../components/Sidebar";
-import LogoutButton from "../../components/LogoutButton";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer
-} from "recharts";
+import api from "../../api/axios";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import dayjs from "dayjs";
 
 export default function EmployeeDashboard() {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const [attendance, setAttendance] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchAttendance = async () => {
-      if (!user || !token) {
-        setLoading(false);
-        return;
-      }
+    api.get("/attendance/user/me")
+      .then(res => setAttendance(res.data.data || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
-      try {
-        const res = await fetch(
-          `http://localhost:3500/api/attendance/user/${user._id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        const data = await res.json();
-        setAttendance(data.data || []);
-      } catch (error) {
-        console.error("Failed to fetch attendance", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAttendance();
-  }, [user, token]);
-
-  const chartData = attendance.map(a => ({
-    date: dayjs(a.date).format("DD MMM"),
-    value:
-      a.status === "PRESENT" ? 1 :
-      a.status === "LATE" ? 0.5 : 0
+  const chartData = attendance.slice(0, 20).map(a => ({
+    date: dayjs(a.createdAt).format("DD MMM"),
+    value: a.status === "PRESENT" ? 1 : a.status === "LATE" ? 0.5 : 0
   }));
 
-  const presentCount = attendance.filter(a => a.status === "PRESENT").length;
-  const lateCount = attendance.filter(a => a.status === "LATE").length;
-  const absentCount = attendance.filter(a => a.status === "ABSENT").length;
+  const present = attendance.filter(a => a.status === "PRESENT").length;
+  const late = attendance.filter(a => a.status === "LATE").length;
+  const absent = attendance.filter(a => a.status === "ABSENT").length;
 
   return (
-    <div className="flex min-h-screen bg-slate-900 text-white">
-      {/* Sidebar */}
+    <div className="flex min-h-screen bg-page">
       <Sidebar />
+      <main className="ml-60 flex-1 p-8 space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800">Welcome, {user?.name}</h1>
+          <p className="text-sm text-slate-500">Here's your attendance summary</p>
+        </div>
 
-      {/* Main Content */}
-      <main className="flex-1 p-6 space-y-6">
-        {/* Header with Logout */}
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Employee Dashboard</h1>
-          <div className="w-32">
-            <LogoutButton />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="bg-green-50 border border-green-100 rounded-xl p-5">
+            <p className="text-sm text-slate-500">Present</p>
+            <p className="text-3xl font-bold text-green-600 mt-1">{present}</p>
+          </div>
+          <div className="bg-amber-50 border border-amber-100 rounded-xl p-5">
+            <p className="text-sm text-slate-500">Late</p>
+            <p className="text-3xl font-bold text-amber-600 mt-1">{late}</p>
+          </div>
+          <div className="bg-red-50 border border-red-100 rounded-xl p-5">
+            <p className="text-sm text-slate-500">Absent</p>
+            <p className="text-3xl font-bold text-red-600 mt-1">{absent}</p>
           </div>
         </div>
 
-        {/* Loading */}
-        {loading && (
-          <div className="text-slate-400">
-            Loading dashboard...
-          </div>
-        )}
-
-        {/* Empty state */}
-        {!loading && attendance.length === 0 && (
-          <div className="text-slate-400">
-            No attendance records found
-          </div>
-        )}
-
-        {/* Attendance Chart */}
-        <div className="bg-slate-800 p-4 rounded-xl">
-          <h2 className="text-xl font-semibold mb-4">
-            Attendance Overview
-          </h2>
-
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={chartData}>
-              <XAxis dataKey="date" />
-              <YAxis ticks={[0, 0.5, 1]} />
-              <Tooltip />
-              <Line
-                type="monotone"
-                dataKey="value"
-                strokeWidth={2}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <SummaryCard label="Present" value={presentCount} />
-          <SummaryCard label="Late" value={lateCount} />
-          <SummaryCard label="Absent" value={absentCount} />
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
+          <h2 className="text-base font-semibold text-slate-800 mb-4">Attendance Trend</h2>
+          {loading ? <p className="text-slate-400">Loading...</p> : chartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={chartData}>
+                <XAxis dataKey="date" stroke="#94a3b8" fontSize={12} />
+                <YAxis ticks={[0, 0.5, 1]} stroke="#94a3b8" fontSize={12} />
+                <Tooltip />
+                <Line type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={2} dot={{ fill: "#3b82f6" }} />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : <p className="text-slate-400 text-sm">No attendance records yet</p>}
         </div>
       </main>
-    </div>
-  );
-}
-
-function SummaryCard({ label, value }) {
-  return (
-    <div className="bg-slate-800 p-5 rounded-lg shadow text-center">
-      <p className="text-slate-400">{label}</p>
-      <p className="text-3xl font-bold mt-2">{value}</p>
     </div>
   );
 }

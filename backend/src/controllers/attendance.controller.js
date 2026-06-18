@@ -236,6 +236,16 @@ const getUserAttendance = async (req, res) => {
 		.json(new ApiResponse(200, records, "User attendance history"));
 };
 
+const getMyAttendance = asyncHandler(async (req, res) => {
+	const records = await AttendanceRecord.find({ userId: req.user._id })
+		.populate("sessionId")
+		.sort({ createdAt: -1 });
+
+	return res
+		.status(200)
+		.json(new ApiResponse(200, records, "My attendance history"));
+});
+
 const updateAttendance = asyncHandler(async (req, res) => {
 	const { recordId } = req.params;
 	const updates = req.body;
@@ -284,5 +294,6 @@ export {
 	getTodayAttendanceSession,
 	getAttendanceBySession,
 	getUserAttendance,
+	getMyAttendance,
 	updateAttendance
 }

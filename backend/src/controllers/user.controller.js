@@ -23,6 +23,43 @@ const generateAccessAndRefreshToken = async (userId) => {
 	}
 }
 
+const signupUser = asyncHandler(async (req, res) => {
+	const { name, email, password, departmentName } = req.body;
+	if (!name || !email || !password || !departmentName) {
+		throw new ApiError(400, "All fields are required!");
+	}
+
+	const existedUser = await User.findOne({ email });
+	if (existedUser) {
+		throw new ApiError(409, "Email already registered!");
+	}
+
+	const department = await Department.findOne({ name: departmentName.trim().toLowerCase() });
+	if (!department) {
+		throw new ApiError(404, `Department "${departmentName}" not found!`);
+	}
+
+	const user = await User.create({
+		name,
+		email,
+		password,
+		role: "EMPLOYEE",
+		department: department._id
+	});
+
+	const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
+	const createdUser = await User.findById(user._id)
+		.select("-password -refreshToken")
+		.populate("department", "name");
+
+	return res.status(201)
+		.cookie("accessToken", accessToken, { httpOnly: true, secure: true })
+		.cookie("refreshToken", refreshToken, { httpOnly: true, secure: true })
+		.json(
+			new ApiResponse(201, { user: createdUser, token: accessToken }, "Account created successfully")
+		);
+});
+
 const refreshAccessToken = asyncHandler(async (req, res) => {
 	const incomingrefreshToken = req.cookies.refreshToken || req.body.refreshToken
 	if (!incomingrefreshToken) {
@@ -44,13 +81,13 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 			secure: true
 		}
 
-		const { accessToken, newrefreshToken } = await generateAccessAndRefreshToken(user._id);
+		const { accessToken, refreshToken: newRefreshToken } = await generateAccessAndRefreshToken(user._id);
 
 		return res.status(200)
 			.cookie("accessToken", accessToken, options)
-			.cookie("refreshToken", newrefreshToken, options)
+			.cookie("refreshToken", newRefreshToken, options)
 			.json(
-				new ApiResponse(200, { accessToken, refreshToken: newrefreshToken } || "Access Token Refreshed")
+				new ApiResponse(200, { accessToken, refreshToken: newRefreshToken }, "Access Token Refreshed")
 			)
 	} catch (error) {
 		throw new ApiError(401, error?.message || "Invalid Refresh Token")
@@ -84,7 +121,7 @@ const loginUser = asyncHandler(async (req, res) => {
 		.cookie("accessToken", accessToken, option)
 		.cookie("refreshToken", refreshToken, option)
 		.json(
-			new ApiResponse(200, { loggedInUser }, "User Logged In Successfully")
+			new ApiResponse(200, { user: loggedInUser, token: accessToken }, "User Logged In Successfully")
 		)
 })
 
@@ -192,11 +229,63 @@ const verifyHome = asyncHandler(async(req, res) => {
 	)
 });
 
+const getMe = asyncHandler(async(req, res) => {
+	const user = await User.findById(req.user._id)
+		.select("-password -refreshToken")
+		.populate("department", "name");
+	if(!user){
+		throw new ApiError(404, "User not found");
+	}
+	return res.status(200).json(
+		new ApiResponse(200, user, "Current user fetched")
+	);
+});
+
+const getDashboardStats = asyncHandler(async(req, res) => {
+	const totalUsers = await User.countDocuments({ status: "ACTIVE" });
+	const totalManagers = await User.countDocuments({ status: "ACTIVE", role: "MANAGER" });
+	const totalEmployees = await User.countDocuments({ status: "ACTIVE", role: "EMPLOYEE" });
+	const totalDepartments = await Department.countDocuments();
+
+	// Today's attendance
+	const startOfToday = new Date();
+	startOfToday.setHours(0, 0, 0, 0);
+	const endOfToday = new Date();
+	endOfToday.setHours(23, 59, 59, 999);
+
+	const { AttendanceRecord } = await import("../models/attendanceRecord.model.js");
+	const todayPresent = await AttendanceRecord.countDocuments({
+		createdAt: { $gte: startOfToday, $lte: endOfToday },
+		status: "PRESENT"
+	});
+	const todayAbsent = await AttendanceRecord.countDocuments({
+		createdAt: { $gte: startOfToday, $lte: endOfToday },
+		status: "ABSENT"
+	});
+	const todayLate = await AttendanceRecord.countDocuments({
+		createdAt: { $gte: startOfToday, $lte: endOfToday },
+		status: "LATE"
+	});
+
+	return res.status(200).json(
+		new ApiResponse(200, {
+			totalUsers,
+			totalManagers,
+			totalEmployees,
+			totalDepartments,
+			todayAttendance: { present: todayPresent, absent: todayAbsent, late: todayLate }
+		}, "Dashboard stats fetched")
+	);
+});
+
 export {
 	loginUser,
+	signupUser,
 	createUser,
 	getActiveUsers,
 	getUser,
+	getMe,
+	getDashboardStats,
 	updateUser,
 	getUsersByDepartment,
 	refreshAccessToken,

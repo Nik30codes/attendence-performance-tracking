@@ -25,6 +25,14 @@ const createDept = asyncHandler(async(req, res) => {
 	)
 })
 
+const getAllDepartments = asyncHandler(async(req, res) => {
+	const departments = await Department.find().sort({ name: 1 });
+	return res.status(200).json(
+		new ApiResponse(200, departments, "Departments fetched successfully")
+	);
+})
+
 export {
-	createDept
+	createDept,
+	getAllDepartments
 }
